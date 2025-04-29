@@ -63,7 +63,7 @@ export default function BookingModal({ doctor, slot, isOpen, onClose }: BookingM
       dateOfBirth: "",
       phone: "",
       email: "",
-      insuranceProvider: "",
+      insuranceProvider: "none",
       reasonForVisit: "",
       termsAccepted: false,
     },
@@ -218,7 +218,7 @@ export default function BookingModal({ doctor, slot, isOpen, onClose }: BookingM
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">None/Self-pay</SelectItem>
+                          <SelectItem value="none">None/Self-pay</SelectItem>
                           <SelectItem value="Blue Cross Blue Shield">Blue Cross Blue Shield</SelectItem>
                           <SelectItem value="Aetna">Aetna</SelectItem>
                           <SelectItem value="Cigna">Cigna</SelectItem>
