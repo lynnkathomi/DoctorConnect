@@ -1,4 +1,5 @@
 import { pgTable, text, serial, integer, timestamp, boolean } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -102,6 +103,39 @@ export const insertAppointmentSchema = createInsertSchema(appointments).pick({
   reasonForVisit: true,
   appointmentId: true,
 });
+
+// Define relations after all tables are defined to avoid circular dependencies
+export const usersRelations = relations(users, ({ many }) => ({
+  appointments: many(appointments),
+}));
+
+export const doctorsRelations = relations(doctors, ({ many }) => ({
+  appointmentSlots: many(appointmentSlots),
+  appointments: many(appointments),
+}));
+
+export const appointmentSlotsRelations = relations(appointmentSlots, ({ one, many }) => ({
+  doctor: one(doctors, {
+    fields: [appointmentSlots.doctorId],
+    references: [doctors.id],
+  }),
+  appointments: many(appointments),
+}));
+
+export const appointmentsRelations = relations(appointments, ({ one }) => ({
+  user: one(users, {
+    fields: [appointments.userId],
+    references: [users.id],
+  }),
+  doctor: one(doctors, {
+    fields: [appointments.doctorId],
+    references: [doctors.id],
+  }),
+  slot: one(appointmentSlots, {
+    fields: [appointments.slotId],
+    references: [appointmentSlots.id],
+  }),
+}));
 
 // Specialties array
 export const SPECIALTIES = [
