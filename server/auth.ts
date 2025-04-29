@@ -30,12 +30,13 @@ async function comparePasswords(supplied: string, stored: string) {
 
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET || "medibook-secret",
+    secret: process.env.SESSION_SECRET || "medibook-session-secret",
     resave: false,
     saveUninitialized: false,
-    cookie: {
+    store: storage.sessionStore,
+    cookie: { 
       secure: process.env.NODE_ENV === "production",
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      maxAge: 1000 * 60 * 60 * 24 // 24 hours
     }
   };
 
@@ -83,23 +84,19 @@ export function setupAuth(app: Express) {
 
       req.login(user, (err) => {
         if (err) return next(err);
-        return res.status(201).json(user);
+        // Remove password from response
+        const { password, ...userWithoutPassword } = user;
+        res.status(201).json(userWithoutPassword);
       });
     } catch (error) {
       next(error);
     }
   });
 
-  app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
-      if (err) return next(err);
-      if (!user) return res.status(401).json({ message: "Invalid credentials" });
-      
-      req.login(user, (err) => {
-        if (err) return next(err);
-        return res.status(200).json(user);
-      });
-    })(req, res, next);
+  app.post("/api/login", passport.authenticate("local"), (req, res) => {
+    // Remove password from response
+    const { password, ...userWithoutPassword } = req.user as SelectUser;
+    res.status(200).json(userWithoutPassword);
   });
 
   app.post("/api/logout", (req, res, next) => {
@@ -111,6 +108,8 @@ export function setupAuth(app: Express) {
 
   app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    res.json(req.user);
+    // Remove password from response
+    const { password, ...userWithoutPassword } = req.user as SelectUser;
+    res.json(userWithoutPassword);
   });
 }
