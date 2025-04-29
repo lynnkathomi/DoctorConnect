@@ -13,9 +13,7 @@ A web-based solution that helps consumers effortlessly find and book appointment
 
 - Backend: Node.js, Express
 - Database: PostgreSQL
-- Frontend: React (or your frontend stack if different)
-- ORM: Prisma or Sequelize (optional)
-- API: REST or GraphQL (specify if applicable)
+- Frontend: React 
 
 ## Setup Instructions
 
@@ -40,14 +38,6 @@ A web-based solution that helps consumers effortlessly find and book appointment
 6. Visit the application
    Go to http://localhost:3000 in your browser
 
-## Folder Structure
-
-/src  
-  /routes       - API routes  
-  /controllers  - Business logic  
-  /models       - Database models  
-  /config       - Configuration files and environment variables  
-  /client       - Frontend application (if applicable)
 
 ## Future Enhancements
 
@@ -56,6 +46,3 @@ A web-based solution that helps consumers effortlessly find and book appointment
 - Admin dashboard for hospital or clinic staff
 - Integration with insurance verification systems
 
-## License
-
-MIT License. See the LICENSE file for more details.
