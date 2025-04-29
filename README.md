@@ -1,4 +1,4 @@
-# Specialist Finder – Connecting Patients to the Right Care
+#Medi Book – Connecting Patients to the Right Care
 
 A web-based solution that helps consumers effortlessly find and book appointments with nearby medical specialists such as gynecologists, neurologists, and cardiologists. Built with a consumer-first approach to reduce healthcare access barriers and streamline the patient journey.
 
