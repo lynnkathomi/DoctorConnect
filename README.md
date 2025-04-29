@@ -20,7 +20,7 @@ A web-based solution that helps consumers effortlessly find and book appointment
 ## Setup Instructions
 
 1. Clone the repository
-   git clone https://github.com/your-username/specialist-finder.git
+   git clone 
    cd specialist-finder
 
 2. Install dependencies
