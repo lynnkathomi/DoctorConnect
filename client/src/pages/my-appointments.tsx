@@ -1,22 +1,21 @@
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { format, parseISO } from "date-fns";
-import { MapPin, Calendar, Clock, Phone, Mail, FileText } from "lucide-react";
-import { getUserAppointments } from "@/lib/api";
-import Header from "@/components/layout/header";
+import { format } from "date-fns";
+import { MapPin, Calendar } from "lucide-react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function MyAppointments() {
-  const [userId] = useState(1); // Default user ID as we don't have authentication
+  const { user } = useAuth();
   
   // Fetch user appointments
   const { data: appointments = [], isLoading } = useQuery({
-    queryKey: [`/api/users/${userId}/appointments`],
-    enabled: true,
+    queryKey: [`/api/users/${user?.id}/appointments`],
+    enabled: !!user?.id,
   });
   
   // Separate upcoming and past appointments
@@ -39,8 +38,6 @@ export default function MyAppointments() {
   
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-800">My Appointments</h1>
@@ -157,7 +154,7 @@ export default function MyAppointments() {
                   You don't have any upcoming appointments scheduled.
                   <div className="mt-4">
                     <Button asChild>
-                      <a href="/find-doctor">Find a Doctor</a>
+                      <Link href="/find-doctor">Find a Doctor</Link>
                     </Button>
                   </div>
                 </AlertDescription>
