@@ -110,10 +110,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Book an appointment
-  apiRouter.post("/appointments", async (req: Request, res: Response) => {
+  apiRouter.post("/appointments", isAuthenticated, async (req: Request, res: Response) => {
     try {
       // Validate request body
       const appointmentData = insertAppointmentSchema.parse(req.body);
+      
+      // If userId is not provided, use the authenticated user's ID
+      if (!appointmentData.userId && req.user) {
+        appointmentData.userId = req.user.id;
+      }
+      
+      // Ensure userId matches the authenticated user
+      if (req.user && appointmentData.userId !== req.user.id) {
+        return res.status(403).json({ message: "You can only book appointments for yourself" });
+      }
       
       // Check if doctor exists
       const doctor = await storage.getDoctor(appointmentData.doctorId);
@@ -138,6 +148,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         appointmentId
       });
       
+      // Mark the slot as unavailable
+      await storage.updateAppointmentSlot(slot.id, false);
+      
       res.status(201).json(appointment);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -151,10 +164,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user appointments
-  apiRouter.get("/users/:userId/appointments", async (req: Request, res: Response) => {
+  apiRouter.get("/users/:userId/appointments", isAuthenticated, async (req: Request, res: Response) => {
     const userId = parseInt(req.params.userId, 10);
     if (isNaN(userId)) {
       return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    // Check if the user is requesting their own appointments
+    if (req.user && req.user.id !== userId) {
+      return res.status(403).json({ message: "You can only view your own appointments" });
     }
 
     const appointments = await storage.getAppointmentsByUserId(userId);
