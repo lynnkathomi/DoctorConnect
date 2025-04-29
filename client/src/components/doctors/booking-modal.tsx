@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,6 +28,8 @@ import {
 } from "@/components/ui/select";
 import { type Doctor, type AppointmentSlot } from "@shared/schema";
 import ConfirmationModal from "./confirmation-modal";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 // Form validation schema
 const formSchema = z.object({
@@ -54,20 +56,33 @@ interface BookingModalProps {
 export default function BookingModal({ doctor, slot, isOpen, onClose }: BookingModalProps) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [booking, setBooking] = useState<any>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
   
-  // Set up form
+  // Set up form with user data if available
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: "",
-      dateOfBirth: "",
-      phone: "",
-      email: "",
-      insuranceProvider: "none",
+      fullName: user?.fullName || "",
+      dateOfBirth: user?.dateOfBirth || "",
+      phone: user?.phone || "",
+      email: user?.email || "",
+      insuranceProvider: user?.insuranceProvider || "none",
       reasonForVisit: "",
       termsAccepted: false,
     },
   });
+  
+  // Update form values when user data changes
+  useEffect(() => {
+    if (user) {
+      form.setValue("fullName", user.fullName);
+      form.setValue("email", user.email);
+      if (user.phone) form.setValue("phone", user.phone);
+      if (user.dateOfBirth) form.setValue("dateOfBirth", user.dateOfBirth);
+      if (user.insuranceProvider) form.setValue("insuranceProvider", user.insuranceProvider);
+    }
+  }, [user, form]);
   
   // Setup mutation for booking appointment
   const bookingMutation = useMutation({
@@ -76,11 +91,31 @@ export default function BookingModal({ doctor, slot, isOpen, onClose }: BookingM
       setBooking(data);
       setShowConfirmation(true);
       queryClient.invalidateQueries({ queryKey: [`/api/doctors/${doctor.id}/slots`] });
+      // Also invalidate user appointments
+      if (user) {
+        queryClient.invalidateQueries({ queryKey: [`/api/users/${user.id}/appointments`] });
+      }
     },
+    onError: (error) => {
+      toast({
+        title: "Booking failed",
+        description: error instanceof Error ? error.message : "An error occurred while booking your appointment.",
+        variant: "destructive",
+      });
+    }
   });
   
   // Handle form submission
   const onSubmit = (data: BookingFormValues) => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to book an appointment.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     bookingMutation.mutate({
       doctorId: doctor.id,
       slotId: slot.id,
@@ -92,7 +127,7 @@ export default function BookingModal({ doctor, slot, isOpen, onClose }: BookingM
       patientDob: data.dateOfBirth,
       insuranceProvider: data.insuranceProvider,
       reasonForVisit: data.reasonForVisit,
-      userId: 1, // Default user ID as we don't have authentication
+      userId: user.id,
       appointmentId: "", // This will be generated on the server
     });
   };
