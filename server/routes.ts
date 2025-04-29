@@ -1,6 +1,7 @@
-import express, { type Express, Request, Response } from "express";
+import express, { type Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { setupAuth } from "./auth";
 import { z } from "zod";
 import { format } from "date-fns";
 import { 
@@ -11,7 +12,18 @@ import {
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Set up authentication
+  setupAuth(app);
+  
   const apiRouter = express.Router();
+
+  // Authentication middleware for protected routes 
+  const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
+    if (req.isAuthenticated()) {
+      return next();
+    }
+    res.status(401).json({ message: "You must be logged in to access this resource" });
+  };
 
   // Get all specialties
   apiRouter.get("/specialties", async (_req: Request, res: Response) => {

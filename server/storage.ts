@@ -18,6 +18,8 @@ import { nanoid } from "nanoid";
 import { eq, and, like } from "drizzle-orm";
 import { db } from "./db";
 
+import session from "express-session";
+
 export interface IStorage {
   // User methods
   getUser(id: number): Promise<User | undefined>;
@@ -40,7 +42,14 @@ export interface IStorage {
   getAppointmentByAppointmentId(appointmentId: string): Promise<Appointment | undefined>;
   getAppointmentsByUserId(userId: number): Promise<Appointment[]>;
   createAppointment(appointment: InsertAppointment): Promise<Appointment>;
+  
+  // Session storage
+  sessionStore: session.Store;
 }
+
+import createMemoryStore from "memorystore";
+
+const MemoryStore = createMemoryStore(session);
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
@@ -52,6 +61,8 @@ export class MemStorage implements IStorage {
   private doctorCurrentId: number;
   private slotCurrentId: number;
   private appointmentCurrentId: number;
+  
+  sessionStore: session.Store;
 
   constructor() {
     this.users = new Map();
@@ -63,6 +74,10 @@ export class MemStorage implements IStorage {
     this.doctorCurrentId = 1;
     this.slotCurrentId = 1;
     this.appointmentCurrentId = 1;
+    
+    this.sessionStore = new MemoryStore({
+      checkPeriod: 86400000 // 24 hours
+    });
 
     // Seed doctors and appointment slots
     this.seedDoctors();
@@ -332,7 +347,21 @@ export class MemStorage implements IStorage {
   }
 }
 
+import { pool } from "./db";
+import connectPg from "connect-pg-simple";
+
+const PostgresSessionStore = connectPg(session);
+
 export class DatabaseStorage implements IStorage {
+  sessionStore: session.Store;
+
+  constructor() {
+    this.sessionStore = new PostgresSessionStore({ 
+      pool, 
+      createTableIfMissing: true 
+    });
+  }
+
   // User methods
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
