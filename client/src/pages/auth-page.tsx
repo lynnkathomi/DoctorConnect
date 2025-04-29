@@ -294,7 +294,7 @@ export default function AuthPage() {
       {/* Right side - Hero section */}
       <div className="flex-1 bg-gradient-to-br from-primary/80 to-primary p-8 flex items-center justify-center hidden md:flex">
         <div className="max-w-lg text-white">
-          <h1 className="text-4xl font-bold mb-6">Welcome to MediBook</h1>
+          <h1 className="text-4xl font-bold mb-6">Welcome</h1>
           <p className="text-xl mb-8">
             Your one-stop platform for finding and booking appointments with the best healthcare specialists.
           </p>
